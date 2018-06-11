@@ -5,11 +5,14 @@
   "scripts": {
     "lint": "tslint ./src/*.ts*",
     "start": "webpack-dev-server --mode development",
-    "webpack": "webpack"
+    "webpack": "webpack",
+    "prepare-mm": "tsc prepare-mm.ts && tslint prepare-mm.ts && node prepare-mm.js"
   },
   "author": "Antony Bartlett",
   "license": "MIT",
   "dependencies": {
+    "@types/node": "^10.3.2",
+    "@types/pako": "^1.0.0",
     "@types/react": "^16.3.17",
     "@types/react-dom": "^16.0.6",
     "@types/react-router-dom": "^4.2.7",
@@ -19,6 +22,7 @@
     "babel-preset-env": "^1.7.0",
     "copy-webpack-plugin": "^4.5.1",
     "html-webpack-plugin": "^3.2.0",
+    "pako": "^1.0.6",
     "react": "^16.4.0",
     "react-dom": "^16.4.0",
     "react-router-dom": "^4.3.1",
