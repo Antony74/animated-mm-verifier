@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { render } from 'react-dom';
+import { MMFile } from './mm.file';
 
 function App() {
 
@@ -12,4 +13,7 @@ render(
   <App />,
   document.getElementById('root'),
 );
+
+const mm: MMFile = new MMFile('public/demo0.mm');
+mm.nextToken();
 
