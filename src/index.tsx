@@ -15,5 +15,17 @@ render(
 );
 
 const mm: MMFile = new MMFile('public/demo0.mm');
+
+
+mm.tokenStream.subscribe(
+  (token: string) => {
+  },
+  (error: any) => {
+    console.error(error);
+  },
+  () => {
+    console.log('done');
+  });
+
 mm.nextToken();
 
