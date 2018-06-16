@@ -3,6 +3,38 @@ import {Observable, Subject} from 'rxjs';
 import * as superagent from 'superagent';
 import * as Pako from 'pako';
 
+class Data {
+    private data: Uint8Array[] = [];
+    private dataIndex = 0;
+    private length = 0;
+
+    getLength(): number {
+        return this.length;
+    }
+
+    push(chunk: Uint8Array) {
+        this.length += chunk.length;
+        this.data.push(chunk);
+    }
+
+    getNextCharCode(): number | false {
+
+        while (this.data.length && this.dataIndex >= this.data[0].length ) {
+            this.data.shift();
+            this.dataIndex = 0;
+        }
+
+        if (this.data.length) {
+            const charCode = this.data[0][this.dataIndex];
+            ++this.dataIndex;
+            --this.length;
+            return charCode;
+        }
+
+        return false;
+    }
+}
+
 enum State {
     ready,
     waiting,
@@ -17,22 +49,26 @@ export class MMFile {
     private eState = State.ready;
     private inflate = new Pako.Inflate();
     private partialToken = '';
-    private data: Uint8Array[] = [];
-    private dataIndex = 0;
     private tokenWanted = false;
+    private data: Data = new Data();
 
     constructor(private filename: string) {
         this.inflate.onData = (chunk: Pako.Data) => {
             this.data.push(chunk as Uint8Array);
             if (this.tokenWanted) {
                 this.tokenWanted = false;
-                this.nextToken();
+                setImmediate(() => {  // Give Pako back control as it may well have more chunks to send through
+                    this.nextToken(); // then process the next token
+                });
             }
         };
 
         this.inflate.onEnd = (status: number) => {
             if (status) {
-                this.tokenSubject.error(this.inflate);
+                const msg: string = ['Pako.Inflate status ', status, ', err ', this.inflate.err, ', msg: ', this.inflate.msg].join('');
+                this.tokenSubject.error(msg);
+            } else {
+                console.log('Inflate complete');
             }
         };
     }
@@ -52,21 +88,6 @@ export class MMFile {
         }
     }
 
-    private getNextCharCode(): number | false {
-        while (this.data.length && this.dataIndex >= this.data[0].length ) {
-            this.data.shift();
-            this.dataIndex = 0;
-        }
-
-        if (this.data.length) {
-            const charCode = this.data[0][this.dataIndex];
-            ++this.dataIndex;
-            return charCode;
-        }
-
-        return false;
-    }
-
     nextToken() {
 
         if (this.tokenWanted) {
@@ -75,17 +96,32 @@ export class MMFile {
         }
 
         for (;;) {
-            const charCode = this.getNextCharCode();
+            const charCode = this.data.getNextCharCode();
 
             if (charCode === false) {
-                this.tokenWanted = true;
-                this.nextDownload();
+
+                switch (this.eState) {
+                case State.eof:
+                    this.tokenSubject.complete();
+                    break;
+                case State.ready:
+                    this.tokenWanted = true;
+                    this.nextDownload();
+                    break;
+                }
+
                 return;
+
             } else if (this.ismmws(charCode)) {
                 if (this.partialToken.length) {
                     const token: string = this.partialToken;
                     this.partialToken = '';
                     this.tokenWanted = false;
+
+                    if (this.eState === State.ready && this.data.getLength() < 256 * 1024) {
+                        this.nextDownload();
+                    }
+
                     this.tokenSubject.next(token);
                     return;
                 }
@@ -106,16 +142,19 @@ export class MMFile {
                 sFileCount = '0' + sFileCount;
             }
 
+            this.eState = State.waiting;
+
             superagent
                 .get(this.filename + '.gz.' + sFileCount)
                 .responseType('arraybuffer')
                 .then((response: superagent.Response) => {
+                    this.eState = State.ready;
                     this.inflate.push(response.body, false);
                 }).catch((error: superagent.ResponseError) => {
                     if (error.status === 404 && this.fileIndex !== 1) {
                         this.eState = State.eof;
 
-                        if (this.data.length === 0) {
+                        if (this.data.getLength() === 0) {
                             this.tokenSubject.complete();
                         }
 
