@@ -14,11 +14,14 @@ render(
   document.getElementById('root'),
 );
 
-const mm: MMFile = new MMFile('public/demo0.mm');
-
+const mm: MMFile = new MMFile('public/set.mm');
 
 mm.tokenStream.subscribe(
   (token: string) => {
+//    console.log(token);
+    setImmediate(() => {
+      mm.nextToken();
+    });
   },
   (error: any) => {
     console.error(error);
