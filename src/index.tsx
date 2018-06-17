@@ -20,7 +20,8 @@ const mm: MMFile = new MMFile('public/set.mm');
 let tokenCount = 0;
 
 mm.tokenStream.subscribe(
-  (token: string) => {
+{
+  next: (token: string) => {
     ++tokenCount;
     if (tokenCount % 1000) {
       setImmediate(() => {
@@ -30,12 +31,13 @@ mm.tokenStream.subscribe(
       mm.nextToken();
     }
   },
-  (error: any) => {
+  error: (error: any) => {
     console.error(error);
   },
-  () => {
+  complete: () => {
     console.log('Done.  ' + tokenCount + ' tokens');
-  });
+  }
+});
 
 mm.nextToken();
 
