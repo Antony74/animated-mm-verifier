@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { render } from 'react-dom';
-import { MMFile } from './mm.file';
+import { MMStatements } from './mm.statements';
+import { MMStatement } from './mm.statement';
 
 function App() {
 
@@ -14,30 +15,26 @@ render(
   document.getElementById('root'),
 );
 
-const mm: MMFile = new MMFile('public/set.mm');
-// const mm: MMFile = new MMFile('public/demo0.mm');
+// const mm: MMStatements = new MMStatements('public/set.mm');
+const mm: MMStatements = new MMStatements('public/demo0.mm');
 
-let tokenCount = 0;
+let count = 0;
 
-mm.tokenStream.subscribe(
+mm.statementStream.subscribe(
 {
-  next: (token: string) => {
-    ++tokenCount;
-    if (tokenCount % 1000) {
-      setImmediate(() => {
-        mm.nextToken();
-      });
-    } else {
-      mm.nextToken();
-    }
+  next: (statement: MMStatement) => {
+    ++count;
+//    setImmediate(() => {
+//      mm.nextStatement();
+//    });
   },
   error: (error: any) => {
     console.error(error);
   },
   complete: () => {
-    console.log('Done.  ' + tokenCount + ' tokens');
+    console.log('Done.  ' + count + ' statements');
   }
 });
 
-mm.nextToken();
+mm.nextStatement();
 
