@@ -1,4 +1,4 @@
-import { MMFile } from './mm.file';
+import { MMLexer } from './mm.lexer';
 import { MMComment } from './mm.comment';
 import { MMStatement } from './mm.statement';
 import { Observable, Subject } from 'rxjs';
@@ -10,15 +10,15 @@ enum State {
     eof
 }
 
-export class MMStatements {
+export class MMParser {
 
-    private mmFile: MMFile;
+    private mmFile: MMLexer;
     private eState: State = State.ready;
     private statementSubject: Subject<MMStatement> = new Subject<MMStatement>();
     statementStream: Observable<MMStatement> = this.statementSubject.asObservable();
 
     constructor(filename: string) {
-        this.mmFile = new MMFile(filename);
+        this.mmFile = new MMLexer(filename);
     }
 
     nextStatement() {

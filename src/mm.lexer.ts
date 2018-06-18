@@ -41,7 +41,7 @@ enum State {
     eof
 }
 
-export class MMFile {
+export class MMLexer {
 
     private tokenSubject = new Subject<string>();
     tokenStream: Observable<string> = this.tokenSubject.asObservable();

@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { render } from 'react-dom';
-import { MMStatements } from './mm.statements';
+import { MMParser } from './mm.parser';
 import { MMStatement } from './mm.statement';
 
 function App() {
@@ -16,7 +16,7 @@ render(
 );
 
 // const mm: MMStatements = new MMStatements('public/set.mm');
-const mm: MMStatements = new MMStatements('public/demo0.mm');
+const mm: MMParser = new MMParser('public/demo0.mm');
 
 let count = 0;
 
