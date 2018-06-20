@@ -51,6 +51,7 @@ export class MMLexer {
     private partialToken = '';
     private tokenWanted = false;
     private data: Data = new Data();
+    private complete = false;
 
     constructor(private filename: string) {
         this.inflate.onData = (chunk: Pako.Data) => {
@@ -103,6 +104,7 @@ export class MMLexer {
                 switch (this.eState) {
                 case State.eof:
                     this.tokenSubject.complete();
+                    this.complete = true;
                     break;
                 case State.ready:
                     this.tokenWanted = true;
@@ -156,6 +158,7 @@ export class MMLexer {
 
                         if (this.data.getLength() === 0) {
                             this.tokenSubject.complete();
+                            this.complete = true;
                         }
 
                     } else {
@@ -167,5 +170,8 @@ export class MMLexer {
         }
     }
 
+    isComplete(): boolean {
+        return this.complete;
+    }
 }
 

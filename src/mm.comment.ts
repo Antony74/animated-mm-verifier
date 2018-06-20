@@ -7,11 +7,11 @@ export class MMComment {
     private commentSubject: Subject<void> = new Subject<void>();
     commentStream: Observable<void> = this.commentSubject.asObservable();
 
-    constructor(file: MMLexer) {
+    constructor(mmLexer: MMLexer) {
 
         let currentToken = '';
 
-        file.tokenStream.pipe(
+        mmLexer.tokenStream.pipe(
             tap( (token: string) => currentToken = token ),
             takeWhile((token: string) => token !== '$)')).subscribe({
             next: (token: string) => {
@@ -26,7 +26,7 @@ export class MMComment {
                     return;
                 }
 
-                file.nextToken();
+                mmLexer.nextToken();
             },
             error: (error) => {
                 this.commentSubject.error(error);
@@ -40,7 +40,7 @@ export class MMComment {
             }
         });
 
-        file.nextToken();
+        mmLexer.nextToken();
     }
 }
 

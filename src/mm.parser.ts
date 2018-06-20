@@ -12,13 +12,13 @@ enum State {
 
 export class MMParser {
 
-    private mmFile: MMLexer;
+    private mmLexer: MMLexer;
     private eState: State = State.ready;
     private statementSubject: Subject<MMStatement> = new Subject<MMStatement>();
     statementStream: Observable<MMStatement> = this.statementSubject.asObservable();
 
     constructor(filename: string) {
-        this.mmFile = new MMLexer(filename);
+        this.mmLexer = new MMLexer(filename);
     }
 
     nextStatement() {
@@ -29,21 +29,18 @@ export class MMParser {
 
         this.eState = State.waiting;
 
-        this.mmFile.tokenStream.pipe(take(1)).subscribe({
+        this.mmLexer.tokenStream.pipe(take(1)).subscribe({
             next: (token: string) => {
 
                 switch (token) {
                 case '$(':
-                    const comment: MMComment = new MMComment(this.mmFile);
-                    comment.commentStream.subscribe({
-                        error: (error) => {
-                            this.statementSubject.error(error);
-                        },
-                        complete: () => {
-                            this.eState = State.ready;
-                            this.nextStatement();
-                        }
-                    });
+
+                    this.parseComment();
+                    break;
+
+                case '$c':
+                case '$v':
+                    this.parseStatement(token);
                     break;
 
                 default:
@@ -54,11 +51,39 @@ export class MMParser {
                 this.statementSubject.error(error);
             },
             complete: () => {
-                this.statementSubject.complete();
+                if (this.mmLexer.isComplete()) {
+                    this.statementSubject.complete();
+                }
             }
         });
 
-        this.mmFile.nextToken();
+        this.mmLexer.nextToken();
+    }
+
+    parseComment() {
+        const comment: MMComment = new MMComment(this.mmLexer);
+        comment.commentStream.subscribe({
+            error: (error) => {
+                this.statementSubject.error(error);
+            },
+            complete: () => {
+                this.eState = State.ready;
+                this.nextStatement();
+            }
+        });
+    }
+
+    parseStatement(token: string) {
+        const statement: MMStatement = new MMStatement(this.mmLexer, token);
+        statement.stream.subscribe({
+            error: (error) => {
+                this.statementSubject.error(error);
+            },
+            complete: () => {
+                this.eState = State.ready;
+                this.statementSubject.next(statement);
+            }
+        });
     }
 }
 
