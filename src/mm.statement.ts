@@ -39,5 +39,23 @@ export class MMStatement {
         return this.tokens.join(' ') + ' $.';
     }
 
+    getType(): string {
+
+        let type: string = this.tokens.length ? this.tokens[0] : '';
+
+        if (type === '$c' || type === '$v') {
+            return type;
+        }
+
+        type = (this.tokens.length >= 2) ? this.tokens[1] : '';
+
+        if (type === '$a' || type === '$f' || type === '$p') {
+            return type;
+        }
+
+        console.error('Failed to identify statement type.  This statement should never have made it into the library');
+        return '';
+    }
+
 }
 
