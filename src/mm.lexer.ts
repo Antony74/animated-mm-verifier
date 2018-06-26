@@ -103,8 +103,8 @@ export class MMLexer {
 
                 switch (this.eState) {
                 case State.eof:
-                    this.tokenSubject.complete();
                     this.complete = true;
+                    this.tokenSubject.complete();
                     break;
                 case State.ready:
                     this.tokenWanted = true;
@@ -157,8 +157,8 @@ export class MMLexer {
                         this.eState = State.eof;
 
                         if (this.data.getLength() === 0) {
-                            this.tokenSubject.complete();
                             this.complete = true;
+                            this.tokenSubject.complete();
                         }
 
                     } else {

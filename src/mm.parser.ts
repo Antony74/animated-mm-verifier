@@ -45,13 +45,23 @@ export class MMParser {
 
                     this.parseComment();
                     break;
-/*
+
                 case '${':
                     this.currentScope = new MMScope(this.currentScope);
                     this.eState = State.ready;
                     this.nextStatement();
                     break;
-*/
+
+                case '$}':
+                    if (this.currentScope.parent === null) {
+                        this.statementSubject.error('$} without corresponding ${');
+                    } else {
+                        this.currentScope = this.currentScope.parent;
+                        this.eState = State.ready;
+                        this.nextStatement();
+                    }
+                    break;
+
                 case '$c':
                 case '$v':
                     this.parseStatement(token);
@@ -110,6 +120,8 @@ export class MMParser {
                     break;
                 case '$f':
                 case '$a':
+                case '$e':
+                case '$p':
                     brc = this.currentScope.add(statement.getTokens()[0], statement);
                     break;
                 default:

@@ -4,7 +4,7 @@ export class MMScope {
     private children: MMScope[] = [];
     private statements: Map<string, MMStatement> = new Map<string, MMStatement>();
 
-    constructor(private parent: MMScope) {
+    constructor(readonly parent: MMScope) {
         if (this.parent) {
             this.parent.children.push(this);
         }

@@ -49,7 +49,7 @@ export class MMStatement {
 
         type = (this.tokens.length >= 2) ? this.tokens[1] : '';
 
-        if (type === '$a' || type === '$f' || type === '$p') {
+        if (type === '$a' || type === '$f' || type === '$p' || type === '$e') {
             return type;
         }
 
