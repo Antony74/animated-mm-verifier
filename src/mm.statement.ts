@@ -8,7 +8,7 @@ export class MMStatement {
     private subject: Subject<void> = new Subject<void>();
     stream: Observable<void> = this.subject.asObservable();
 
-    constructor(mmLexer: MMLexer, firstToken: string) {
+    constructor(mmLexer: MMLexer, firstToken: string, readonly index: number) {
         this.tokens.push(firstToken);
 
         let currentToken = '';
@@ -55,6 +55,10 @@ export class MMStatement {
 
         console.error('Failed to identify statement type.  This statement should never have made it into the library');
         return '';
+    }
+
+    getTokens(): string[] {
+        return this.tokens;
     }
 
 }
