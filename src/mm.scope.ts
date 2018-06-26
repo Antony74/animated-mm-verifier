@@ -11,6 +11,12 @@ export class MMScope {
     }
 
     add(label: string, statement: MMStatement): boolean {
+        const type: string = statement.getType();
+
+        if ( this.parent !== null && (type === '$a' || type === '$p') ) {
+            return this.parent.add(label, statement);
+        }
+
         const existingStatement: MMStatement = this.get(label, statement.index);
 
         if (existingStatement) {
