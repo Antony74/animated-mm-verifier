@@ -1,6 +1,4 @@
 import { MMCommentStripper } from './mm.comment.stripper';
-import { MMLexer } from './mm.lexer';
-import { MMComment } from './mm.comment';
 import { MMStatement } from './mm.statement';
 import { MMScope } from './mm.scope';
 import { Observable, Subject } from 'rxjs';
@@ -28,7 +26,7 @@ export class MMParser {
     private currentScope: MMScope = this.rootScope;
 
     constructor(filename: string) {
-        this.mmLexer = new MMLexer(filename);
+        this.mmLexer = new MMCommentStripper(filename);
     }
 
     nextStatement() {
@@ -43,11 +41,6 @@ export class MMParser {
             next: (token: string) => {
 
                 switch (token) {
-                case '$(':
-
-                    this.parseComment();
-                    break;
-
                 case '${':
                     this.currentScope = new MMScope(this.currentScope);
                     this.eState = State.ready;
@@ -90,19 +83,6 @@ export class MMParser {
         });
 
         this.mmLexer.nextToken();
-    }
-
-    parseComment() {
-        const comment: MMComment = new MMComment(this.mmLexer);
-        comment.commentStream.subscribe({
-            error: (error) => {
-                this.statementSubject.error(error);
-            },
-            complete: () => {
-                this.eState = State.ready;
-                this.nextStatement();
-            }
-        });
     }
 
     parseStatement(token: string) {

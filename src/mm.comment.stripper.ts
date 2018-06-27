@@ -46,8 +46,11 @@ export class MMCommentStripper implements IMMLexer {
                 this.tokenSubject.error(error);
             },
             complete: () => {
-                this.eState = State.eof;
-                this.tokenSubject.complete();
+
+                if (this.mmLexer.isComplete()) {
+                    this.eState = State.eof;
+                    this.tokenSubject.complete();
+                }
             }
         });
 
