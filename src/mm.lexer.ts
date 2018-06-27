@@ -59,9 +59,7 @@ export class MMLexer implements IMMLexer {
             this.data.push(chunk as Uint8Array);
             if (this.tokenWanted) {
                 this.tokenWanted = false;
-                setImmediate(() => {  // Give Pako back control as it may well have more chunks to send through
-                    this.nextToken(); // then process the next token
-                });
+                this.nextToken();
             }
         };
 
@@ -92,46 +90,49 @@ export class MMLexer implements IMMLexer {
 
     nextToken() {
 
-        if (this.tokenWanted) {
-            this.tokenSubject.error('MMLexer nextToken() called while still waiting on previous token');
-            return;
-        }
+        setImmediate(() => {
 
-        for (;;) {
-            const charCode = this.data.getNextCharCode();
-
-            if (charCode === false) {
-
-                switch (this.eState) {
-                case State.eof:
-                    this.complete = true;
-                    this.tokenSubject.complete();
-                    break;
-                case State.ready:
-                    this.tokenWanted = true;
-                    this.nextDownload();
-                    break;
-                }
-
+            if (this.tokenWanted) {
+                this.tokenSubject.error('MMLexer nextToken() called while still waiting on previous token');
                 return;
+            }
 
-            } else if (this.ismmws(charCode)) {
-                if (this.partialToken.length) {
-                    const token: string = this.partialToken;
-                    this.partialToken = '';
-                    this.tokenWanted = false;
+            for (;;) {
+                const charCode = this.data.getNextCharCode();
 
-                    if (this.eState === State.ready && this.data.getLength() < 256 * 1024) {
+                if (charCode === false) {
+
+                    switch (this.eState) {
+                    case State.eof:
+                        this.complete = true;
+                        this.tokenSubject.complete();
+                        break;
+                    case State.ready:
+                        this.tokenWanted = true;
                         this.nextDownload();
+                        break;
                     }
 
-                    this.tokenSubject.next(token);
                     return;
+
+                } else if (this.ismmws(charCode)) {
+                    if (this.partialToken.length) {
+                        const token: string = this.partialToken;
+                        this.partialToken = '';
+                        this.tokenWanted = false;
+
+                        if (this.eState === State.ready && this.data.getLength() < 256 * 1024) {
+                            this.nextDownload();
+                        }
+
+                        this.tokenSubject.next(token);
+                        return;
+                    }
+                } else {
+                    this.partialToken += String.fromCharCode(charCode);
                 }
-            } else {
-                this.partialToken += String.fromCharCode(charCode);
             }
-        }
+        });
     }
 
     private nextDownload() {

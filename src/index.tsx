@@ -15,8 +15,8 @@ render(
   document.getElementById('root'),
 );
 
-// const mm: MMStatements = new MMStatements('public/set.mm');
-const mm: MMParser = new MMParser('public/demo0.mm');
+const mm: MMParser = new MMParser('public/set.mm');
+// const mm: MMParser = new MMParser('public/demo0.mm');
 
 let count = 0;
 
@@ -25,9 +25,7 @@ mm.statementStream.subscribe(
   next: (statement: MMStatement) => {
     ++count;
     console.log(statement.toString());
-    setImmediate(() => {
-      mm.nextStatement();
-    });
+    mm.nextStatement();
   },
   error: (error: any) => {
     console.error(error);
