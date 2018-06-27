@@ -1,4 +1,4 @@
-import { MMLexer } from './mm.lexer';
+import { IMMLexer } from './mm.lexer.interface';
 import { Subject, Observable } from 'rxjs';
 import { tap, takeWhile } from 'rxjs/operators';
 
@@ -8,7 +8,7 @@ export class MMStatement {
     private subject: Subject<void> = new Subject<void>();
     stream: Observable<void> = this.subject.asObservable();
 
-    constructor(mmLexer: MMLexer, firstToken: string, readonly index: number) {
+    constructor(mmLexer: IMMLexer, firstToken: string, readonly index: number) {
         this.tokens.push(firstToken);
 
         let currentToken = '';

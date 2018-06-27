@@ -1,13 +1,13 @@
-import { MMLexer } from './mm.lexer';
 import { Observable, Subject } from 'rxjs';
 import { takeWhile, tap } from 'rxjs/operators';
+import { IMMLexer } from './mm.lexer.interface';
 
 export class MMComment {
 
     private commentSubject: Subject<void> = new Subject<void>();
     commentStream: Observable<void> = this.commentSubject.asObservable();
 
-    constructor(mmLexer: MMLexer) {
+    constructor(mmLexer: IMMLexer) {
 
         let currentToken = '';
 

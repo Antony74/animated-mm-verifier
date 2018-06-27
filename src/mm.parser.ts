@@ -1,9 +1,11 @@
+import { MMCommentStripper } from './mm.comment.stripper';
 import { MMLexer } from './mm.lexer';
 import { MMComment } from './mm.comment';
 import { MMStatement } from './mm.statement';
 import { MMScope } from './mm.scope';
 import { Observable, Subject } from 'rxjs';
 import { take } from 'rxjs/operators';
+import { IMMLexer } from './mm.lexer.interface';
 
 enum State {
     ready,
@@ -13,7 +15,7 @@ enum State {
 
 export class MMParser {
 
-    private mmLexer: MMLexer;
+    private mmLexer: IMMLexer;
     private eState: State = State.ready;
     private statementSubject: Subject<MMStatement> = new Subject<MMStatement>();
     statementStream: Observable<MMStatement> = this.statementSubject.asObservable();

@@ -2,6 +2,7 @@
 import {Observable, Subject} from 'rxjs';
 import * as superagent from 'superagent';
 import * as Pako from 'pako';
+import { IMMLexer } from './mm.lexer.interface';
 
 class Data {
     private data: Uint8Array[] = [];
@@ -41,7 +42,7 @@ enum State {
     eof
 }
 
-export class MMLexer {
+export class MMLexer implements IMMLexer {
 
     private tokenSubject = new Subject<string>();
     tokenStream: Observable<string> = this.tokenSubject.asObservable();
@@ -92,7 +93,7 @@ export class MMLexer {
     nextToken() {
 
         if (this.tokenWanted) {
-            this.tokenSubject.error('nextToken() called while still waiting on previous token');
+            this.tokenSubject.error('MMLexer nextToken() called while still waiting on previous token');
             return;
         }
 
@@ -136,7 +137,7 @@ export class MMLexer {
     private nextDownload() {
 
         if (this.eState !== State.ready) {
-            console.log('nextDownload called when not ready');
+            console.log('MMLexer nextDownload called when not ready');
         } else {
             ++this.fileIndex;
             let sFileCount: string = this.fileIndex.toString();
