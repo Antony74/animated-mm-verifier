@@ -43,7 +43,7 @@ export class MMStatement {
 
         let type: string = this.tokens.length ? this.tokens[0] : '';
 
-        if (type === '$c' || type === '$v') {
+        if (type === '$c' || type === '$v' || type === '$d') {
             return type;
         }
 

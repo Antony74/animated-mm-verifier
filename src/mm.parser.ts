@@ -59,6 +59,7 @@ export class MMParser {
 
                 case '$c':
                 case '$v':
+                case '$d':
                     this.parseStatement(token);
                     break;
 
@@ -105,6 +106,9 @@ export class MMParser {
                 case '$e':
                 case '$p':
                     brc = this.currentScope.add(statement.getTokens()[0], statement);
+                    break;
+                case '$d':
+                    this.currentScope.addDistinctiveness(statement);
                     break;
                 default:
                     this.statementSubject.error('statement type ' + statement.getType() + ' not supported (yet)');

@@ -24,7 +24,7 @@ mm.statementStream.subscribe(
 {
   next: (statement: MMStatement) => {
     ++count;
-    console.log(statement.toString());
+//    console.log(statement.toString());
     mm.nextStatement();
   },
   error: (error: any) => {

@@ -3,6 +3,7 @@ import { MMStatement } from './mm.statement';
 export class MMScope {
     private children: MMScope[] = [];
     private statements: Map<string, MMStatement> = new Map<string, MMStatement>();
+    private distinctivnesses: MMStatement[] = []; // Put $d statements here for now.  I may have to index them though.
 
     constructor(readonly parent: MMScope) {
         if (this.parent) {
@@ -40,6 +41,10 @@ export class MMScope {
         } else {
             return null;
         }
+    }
+
+    addDistinctiveness(statement: MMStatement) {
+        this.distinctivnesses.push(statement);
     }
 }
 
