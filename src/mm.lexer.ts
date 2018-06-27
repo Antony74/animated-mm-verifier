@@ -65,7 +65,7 @@ export class MMLexer implements IMMLexer {
 
         this.inflate.onEnd = (status: number) => {
             if (status) {
-                const msg: string = ['Pako.Inflate status ', status, ', err ', this.inflate.err, ', msg: ', this.inflate.msg].join('');
+                const msg: string = ['Failed to unzip "', this.filename, '", error ', status].join('');
                 this.tokenSubject.error(msg);
             } else {
                 console.log('Inflate complete');
@@ -157,6 +157,7 @@ export class MMLexer implements IMMLexer {
                 }).catch((error: superagent.ResponseError) => {
                     if (error.status === 404 && this.fileIndex !== 1) {
                         this.eState = State.eof;
+                        this.inflate.push(new ArrayBuffer(0), true);
 
                         if (this.data.getLength() === 0) {
                             this.complete = true;
