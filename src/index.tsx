@@ -3,6 +3,8 @@ import { render } from 'react-dom';
 import { MMParser } from './mm.parser';
 import { MMStatement } from './mm.statement';
 
+const P5 = require('p5');
+
 function App() {
 
   return (
@@ -35,5 +37,21 @@ mm.statementStream.subscribe(
   }
 });
 
-mm.nextStatement();
+// mm.nextStatement();
+
+const sketch = new P5((p5) => {
+
+  p5.setup = () => {
+    console.log('setup');
+  };
+
+  p5.draw = () => {
+    p5.background(230);
+    p5.fill(255, 0, 255);
+    p5.ellipse(50, 50, 70, 70);
+    p5.noLoop();
+  };
+
+});
+
 
