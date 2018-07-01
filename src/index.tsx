@@ -26,6 +26,8 @@ enum EPhase {
 const mm: MMParser = new MMParser('public/set.mm');
 // const mm: MMParser = new MMParser('public/demo0.mm');
 
+const speed = 10;
+
 const sketch = new P5((p5) => {
 
   let phase: EPhase = EPhase.statementAppears;
@@ -74,7 +76,7 @@ const sketch = new P5((p5) => {
         mainStatementLeft,
         p5.map(phasePos, 0, 1, p5.height + p5.textAscent() + p5.textDescent(), mainStatementBottom));
 
-      phasePos += 0.005;
+      phasePos += 0.005 * speed;
       if (phasePos > 1) {
         phase = EPhase.statementFades;
         phasePos = 0;
@@ -90,7 +92,7 @@ const sketch = new P5((p5) => {
 
       p5.text(statement.toString(), mainStatementLeft, mainStatementBottom);
 
-      phasePos += 0.005;
+      phasePos += 0.005 * speed;
       if (phasePos > 1) {
         phase = EPhase.statementDone;
         phasePos = 0;

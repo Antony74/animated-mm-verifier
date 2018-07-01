@@ -105,7 +105,20 @@ export class MMParser {
                 case '$a':
                 case '$e':
                 case '$p':
-                    brc = this.currentScope.add(statement.getTokens()[0], statement);
+
+                    if (statement.getType() === '$p') {
+                        const error: string = statement.decompressProof();
+
+                        if (error.length) {
+                            brc = false;
+                            this.statementSubject.error(error);
+                        }
+                    }
+
+                    if (brc) {
+                        brc = this.currentScope.add(statement.getTokens()[0], statement);
+                    }
+
                     break;
                 case '$d':
                     this.currentScope.addDistinctiveness(statement);
