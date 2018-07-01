@@ -8,7 +8,7 @@ const P5 = require('p5');
 function App() {
 
   return (
-    <div>Hello, World!</div>
+    <div></div>
   );
 }
 
@@ -17,41 +17,94 @@ render(
   document.getElementById('root'),
 );
 
+enum EPhase {
+  statementAppears,
+  statementFades,
+  statementDone
+}
+
 const mm: MMParser = new MMParser('public/set.mm');
 // const mm: MMParser = new MMParser('public/demo0.mm');
 
-let count = 0;
-
-mm.statementStream.subscribe(
-{
-  next: (statement: MMStatement) => {
-    ++count;
-//    console.log(statement.toString());
-    mm.nextStatement();
-  },
-  error: (error: any) => {
-    console.error(error);
-  },
-  complete: () => {
-    console.log('Done.  ' + count + ' statements');
-  }
-});
-
-// mm.nextStatement();
-
 const sketch = new P5((p5) => {
 
+  let phase: EPhase = EPhase.statementAppears;
+  let phasePos = 0;
+  let statement: MMStatement;
+
+  mm.statementStream.subscribe(
+  {
+    next: (st: MMStatement) => {
+      statement = st;
+      phase = EPhase.statementAppears;
+      phasePos = 0;
+    },
+    error: (error: any) => {
+      console.error(error);
+    },
+    complete: () => {
+      console.log('Done.');
+    }
+  });
+
   p5.setup = () => {
-    console.log('setup');
+    p5.createCanvas(1024, 456); // aspect ratio 16:9
   };
 
   p5.draw = () => {
-    p5.background(230);
-    p5.fill(255, 0, 255);
-    p5.ellipse(50, 50, 70, 70);
-    p5.noLoop();
+
+    const backColor: number[] = [230, 230, 230];
+    const textColor: number[] = [0, 0, 0];
+    p5.background(backColor[0], backColor[1], backColor[2]);
+
+    if (!statement) {
+      return;
+    }
+
+    const mainStatementBottom = p5.height * 0.95;
+    const mainStatementLeft = p5.width * 0.15;
+    p5.textSize(p5.height * 0.03);
+
+    switch (phase) {
+    case EPhase.statementAppears:
+      p5.fill(textColor[0], textColor[1], textColor[2]);
+
+      p5.text(
+        statement.toString(),
+        mainStatementLeft,
+        p5.map(phasePos, 0, 1, p5.height + p5.textAscent() + p5.textDescent(), mainStatementBottom));
+
+      phasePos += 0.005;
+      if (phasePos > 1) {
+        phase = EPhase.statementFades;
+        phasePos = 0;
+      }
+      break;
+
+    case EPhase.statementFades:
+      p5.fill(
+        p5.map(phasePos, 0, 1, textColor[0], backColor[0]),
+        p5.map(phasePos, 0, 1, textColor[1], backColor[1]),
+        p5.map(phasePos, 0, 1, textColor[2], backColor[2])
+      );
+
+      p5.text(statement.toString(), mainStatementLeft, mainStatementBottom);
+
+      phasePos += 0.005;
+      if (phasePos > 1) {
+        phase = EPhase.statementDone;
+        phasePos = 0;
+        mm.nextStatement();
+      }
+      break;
+
+    case EPhase.statementDone:
+      break;
+    }
+
   };
 
 });
 
+mm.nextStatement();
 
