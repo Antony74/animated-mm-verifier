@@ -107,7 +107,7 @@ export class MMParser {
                 case '$p':
 
                     if (statement.getType() === '$p') {
-                        const error: string = statement.decompressProof();
+                        const error: string = statement.decompressProof(this.currentScope);
 
                         if (error.length) {
                             brc = false;
@@ -137,7 +137,7 @@ export class MMParser {
     }
 
     completeCV(statement: MMStatement): boolean {
-        const tokens: string[] = statement.getTokens();
+        const tokens: ReadonlyArray<string> = statement.getTokens();
         for (let n = 1; n < tokens.length; ++n) {
             this.currentScope.add(tokens[n], statement);
         }

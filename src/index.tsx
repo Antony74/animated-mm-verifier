@@ -33,6 +33,7 @@ const sketch = new P5((p5) => {
   let phase: EPhase = EPhase.statementAppears;
   let phasePos = 0;
   let statement: MMStatement;
+  let proofCount = 0;
 
   mm.statementStream.subscribe(
   {
@@ -40,6 +41,10 @@ const sketch = new P5((p5) => {
       statement = st;
       phase = EPhase.statementAppears;
       phasePos = 0;
+
+      if (statement.getType() === '$p') {
+        ++proofCount;
+      }
     },
     error: (error: any) => {
       console.error(error);
@@ -93,7 +98,7 @@ const sketch = new P5((p5) => {
       p5.text(statement.toString(), mainStatementLeft, mainStatementBottom);
 
       phasePos += 0.005 * speed;
-      if (phasePos > 1) {
+      if (phasePos > 1 && proofCount < 10) {
         phase = EPhase.statementDone;
         phasePos = 0;
         mm.nextStatement();

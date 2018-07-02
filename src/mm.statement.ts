@@ -1,6 +1,7 @@
 import { IMMLexer } from './mm.lexer.interface';
 import { Subject, Observable } from 'rxjs';
 import { tap, takeWhile } from 'rxjs/operators';
+import { MMScope } from './mm.scope';
 
 export class MMStatement {
 
@@ -57,13 +58,26 @@ export class MMStatement {
         return '';
     }
 
-    getTokens(): string[] {
+    getTokens(): ReadonlyArray<string> {
         return this.tokens;
     }
 
-    decompressProof(): string {
-        let nToken = 0;
+    decompressProof(scope: MMScope): string {
+
+        const labels: string[] = [];
+        const floatingHypotheses: string[] = [];
+
+        let nToken = 2;
         while (nToken < this.tokens.length && this.tokens[nToken] !== '$=') {
+
+            const token = this.tokens[nToken];
+
+            const variable: string = scope.getFloatingHypothesis(token, this.index);
+
+            if (variable.length) {
+                floatingHypotheses.push(variable);
+            }
+
             ++nToken;
         }
 
@@ -79,7 +93,13 @@ export class MMStatement {
             return ''; // Proof is not compressed.  No action needed.
         }
 
+        ++nToken;
+
         while (nToken < this.tokens.length && this.tokens[nToken] !== ')') {
+            const token = this.tokens[nToken];
+
+            labels.push(token);
+
             ++nToken;
         }
 
@@ -110,16 +130,16 @@ export class MMStatement {
         const proofnumbers: number[] | string = this.getproofnumbers(proof);
 
         if (typeof(proofnumbers) === 'string') {
-            this.subject.error(proofnumbers);
-        } else {
-            console.log(proofnumbers);
+            return proofnumbers;
         }
+
+        this.decompressProof2(floatingHypotheses, labels, proofnumbers as number[]);
 
         return '';
     }
 
     // Determine if a token consists solely of upper-case letters or question marks
-    containsonlyupperorq(token: string): boolean {
+    private containsonlyupperorq(token: string): boolean {
 
         for (let n = 0; n < token.length; ++n) {
             if ( (token[n] < 'A' || token[n] > 'Z') && token[n] !== '?') {
@@ -132,7 +152,7 @@ export class MMStatement {
 
     // Get the raw numbers from compressed proof format.
     // The letter Z is translated as 0.
-    getproofnumbers(proof: string): number[] | string {
+    private getproofnumbers(proof: string): number[] | string {
 
         const proofnumbers: number[] = [];
         let num = 0;
@@ -179,5 +199,100 @@ export class MMStatement {
         return proofnumbers;
     }
 
+    decompressProof2(
+        floatingHypotheses: string[],
+        labels: string[],
+        proofnumbers: number[]) {
+
+        console.log('Proof of ' + this.tokens[0]);
+        for (let n = 0; n < floatingHypotheses.length; ++n) {
+            console.log(['Floating hypothesis ', n + 1, ', ', floatingHypotheses[n]].join(''));
+        }
+
+        for (let n = 0; n < labels.length; ++n) {
+            console.log(['Label ', floatingHypotheses.length + n + 1, ', ', labels[n]].join(''));
+        }
+
+        for (let n = 0; n < proofnumbers.length; ++n) {
+            console.log(['Proof step ', n + 1, ', proof number ', proofnumbers[n]].join(''));
+        }
+
+    /*
+        const stack: string[] = [];
+        const savedSteps: string[] = [];
+
+        for (let n = 0; n < proofnumbers.length; ++n) {
+
+            // Save the last proof step if 0
+            if (proofnumbers[n] === 0) {
+                savedSteps.push(stack[stack.length - 1]);
+                continue;
+            }
+
+            // If step is a mandatory hypothesis, just push it onto the stack.
+            if (proofnumbers[n] <= floatingHypotheses.length) {
+                stack.push(floatingHypotheses[n]);
+            } else if (proofnumbers[n] <= floatingHypotheses.length + labels.length) {
+                const proofstep: string = labels[n - floatingHypotheses.length - 1];
+
+                // If step is a (non-mandatory) hypothesis,
+                // just push it onto the stack.
+                std::map<std::string, Hypothesis>::const_iterator hyp
+                (hypotheses.find(proofstep));
+                if (hyp != hypotheses.end())
+                {
+                    stack.push_back(hyp->second.first);
+                    tree.addLeaf(proofstep, hyp->second.first);
+                    continue;
+                }
+
+                // It must be an axiom or theorem
+                bool const okay(verifyassertionref(label, proofstep, &stack, &tree));
+                if (!okay)
+                    return false;
+            }
+            else // Must refer to saved step
+            {
+                if (*iter > labelt + savedsteps.size())
+                {
+                    std::cerr << "Number in compressed proof of " << label
+                              << " is too high" << std::endl;
+                    return false;
+                }
+
+                stack.push_back(savedsteps[*iter - labelt - 1]);
+                tree.cloneSavedStep(*iter - labelt - 1);
+            }
+        }
+
+        if (stack.size() != 1)
+        {
+            std::cerr << "Proof of theorem " << label
+                      << " does not end with only one item on the stack"
+                      << std::endl;
+            return false;
+        }
+
+        if (stack[0] != theorem.expression)
+        {
+            std::cerr << "Proof of theorem " << label << " proves wrong statement"
+                      << std::endl;
+        }
+
+        std::string dotfilename = label + ".dotfile";
+
+        try
+        {
+            std::ofstream dotfile(dotfilename);
+            dotfile << tree.asString().c_str();
+        }
+        catch (std::exception e)
+        {
+            printf("Problem writing %s: %s\n", dotfilename.c_str(), e.what());
+        }
+
+        return true;
+*/
+    }
 }
 
