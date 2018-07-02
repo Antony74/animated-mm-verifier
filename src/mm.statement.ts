@@ -62,20 +62,23 @@ export class MMStatement {
         return this.tokens;
     }
 
-    decompressProof(scope: MMScope): string {
+    processProof(scope: MMScope): string {
 
+        if (this.getType() !== '$p') {
+            return 'processProof: not a proof';
+        }
+
+        const hypotheses: string[] = [];
         const labels: string[] = [];
-        const floatingHypotheses: string[] = [];
 
         let nToken = 2;
         while (nToken < this.tokens.length && this.tokens[nToken] !== '$=') {
 
             const token = this.tokens[nToken];
 
-            const variable: string = scope.getFloatingHypothesis(token, this.index);
-
-            if (variable.length) {
-                floatingHypotheses.push(variable);
+            const hyp: MMStatement = scope.getFloatingHypothesis(token, this.index);
+            if (hyp) {
+                hypotheses.push(hyp.getTokens()[0]);
             }
 
             ++nToken;
@@ -89,51 +92,57 @@ export class MMStatement {
 
         ++nToken;
 
-        if (this.tokens[nToken] !== '(') {
-            return ''; // Proof is not compressed.  No action needed.
-        }
-
-        ++nToken;
-
-        while (nToken < this.tokens.length && this.tokens[nToken] !== ')') {
-            const token = this.tokens[nToken];
-
-            labels.push(token);
+        if (this.tokens[nToken] === '(') {
+            // Proof is compressed.  Decompress it.
 
             ++nToken;
-        }
 
-        if (nToken >= this.tokens.length) {
-            return 'Unfinished $p statement';
-        }
+            while (nToken < this.tokens.length && this.tokens[nToken] !== ')') {
+                const token = this.tokens[nToken];
 
-        ++nToken;
+                labels.push(token);
 
-        // Get proof steps
+                ++nToken;
+            }
 
-        let proof = '';
-        while (nToken < this.tokens.length) {
-
-            const token: string = this.tokens[nToken];
-            proof += token;
-            if (!this.containsonlyupperorq(token)) {
-                return 'Bogus character found in compressed proof of ' + this.tokens[0];
+            if (nToken >= this.tokens.length) {
+                return 'Unfinished $p statement';
             }
 
             ++nToken;
+
+            // Get proof steps
+
+            let proof = '';
+            while (nToken < this.tokens.length) {
+
+                const token: string = this.tokens[nToken];
+                proof += token;
+                if (!this.containsonlyupperorq(token)) {
+                    return 'Bogus character found in compressed proof of ' + this.tokens[0];
+                }
+
+                ++nToken;
+            }
+
+            if (!proof.length) {
+                return 'Theorem ' + this.tokens[0] + ' has no proof';
+            }
+
+            const proofnumbers: number[] | string = this.getproofnumbers(proof);
+
+            if (typeof(proofnumbers) === 'string') {
+                return proofnumbers;
+            }
+
+            this.decompressProof(
+                [].concat(
+                    hypotheses,
+                    scope.getEssentialHypotheses(this.index).map((hyp) => hyp.getTokens()[0])
+                ),
+                labels,
+                proofnumbers as number[]);
         }
-
-        if (!proof.length) {
-            return 'Theorem ' + this.tokens[0] + ' has no proof';
-        }
-
-        const proofnumbers: number[] | string = this.getproofnumbers(proof);
-
-        if (typeof(proofnumbers) === 'string') {
-            return proofnumbers;
-        }
-
-        this.decompressProof2(floatingHypotheses, labels, proofnumbers as number[]);
 
         return '';
     }
@@ -199,18 +208,18 @@ export class MMStatement {
         return proofnumbers;
     }
 
-    decompressProof2(
-        floatingHypotheses: string[],
+    private decompressProof(
+        hypotheses: string[],
         labels: string[],
         proofnumbers: number[]) {
 
         console.log('Proof of ' + this.tokens[0]);
-        for (let n = 0; n < floatingHypotheses.length; ++n) {
-            console.log(['Floating hypothesis ', n + 1, ', ', floatingHypotheses[n]].join(''));
+        for (let n = 0; n < hypotheses.length; ++n) {
+            console.log(['Hypothesis ', n + 1, ', ', hypotheses[n]].join(''));
         }
 
         for (let n = 0; n < labels.length; ++n) {
-            console.log(['Label ', floatingHypotheses.length + n + 1, ', ', labels[n]].join(''));
+            console.log(['Label ', hypotheses.length + n + 1, ', ', labels[n]].join(''));
         }
 
         for (let n = 0; n < proofnumbers.length; ++n) {

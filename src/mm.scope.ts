@@ -5,6 +5,7 @@ export class MMScope {
     private statements: Map<string, MMStatement> = new Map<string, MMStatement>();
     private distinctivnesses: MMStatement[] = []; // Put $d statements here for now.  I may have to index them though.
     private floatingHypotheses: Map<string, MMStatement> = new Map<string, MMStatement>();
+    private essentialHypotheses: MMStatement[] = [];
 
     constructor(readonly parent: MMScope) {
         if (this.parent) {
@@ -18,6 +19,8 @@ export class MMScope {
         if (type === '$f') {
             const lastToken: string = statement.getTokens()[statement.getTokens().length - 1];
             this.floatingHypotheses.set(lastToken, statement);
+        } else if (type === '$e') {
+            this.essentialHypotheses.push(statement);
         }
 
         if ( this.parent !== null && (type === '$a' || type === '$p') ) {
@@ -49,19 +52,25 @@ export class MMScope {
         }
     }
 
-    getFloatingHypothesis(symbol: string, index: number): string {
+    getFloatingHypothesis(symbol: string, index: number): MMStatement {
         const statement = this.floatingHypotheses.get(symbol);
         if (statement && statement.getType() === '$f') {
             if (statement.index < index) {
-                return statement.getTokens()[0];
+                return statement;
             } else {
-                return '';
+                return null;
             }
         } else if (this.parent) {
             return this.parent.getFloatingHypothesis(symbol, index);
         } else {
-            return '';
+            return null;
         }
+    }
+
+    getEssentialHypotheses(index: number): MMStatement[] {
+        const fromParent: MMStatement[] = this.parent ? this.parent.getEssentialHypotheses(index) : [];
+        const retval = [].concat(fromParent, this.essentialHypotheses).filter((statement: MMStatement) => statement.index < index);
+        return retval;
     }
 
     addDistinctiveness(statement: MMStatement) {

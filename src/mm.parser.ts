@@ -107,7 +107,7 @@ export class MMParser {
                 case '$p':
 
                     if (statement.getType() === '$p') {
-                        const error: string = statement.decompressProof(this.currentScope);
+                        const error: string = statement.processProof(this.currentScope);
 
                         if (error.length) {
                             brc = false;
