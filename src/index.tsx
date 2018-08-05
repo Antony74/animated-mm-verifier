@@ -1,7 +1,8 @@
 import * as React from 'react';
 import { render } from 'react-dom';
-import { MMParser } from './mm.parser';
+import { createParser } from './mm.parser';
 import { MMStatement } from './mm.statement';
+import { Stream, Observer } from './stream';
 
 const P5 = require('p5');
 
@@ -23,8 +24,10 @@ enum EPhase {
   statementDone
 }
 
-const mm: MMParser = new MMParser('public/set.mm');
+const mm: Stream<MMStatement> = createParser('public/set.mm');
 // const mm: MMParser = new MMParser('public/demo0.mm');
+
+let observer: Observer<MMStatement> = null;
 
 const speed = 10;
 
@@ -35,9 +38,8 @@ const _ = new P5((p5) => {
   let statement: MMStatement;
   let proofCount = 0;
 
-  mm.statementStream.subscribe(
-  {
-    next: (st: MMStatement) => {
+  observer = {
+    next: (st: MMStatement): boolean => {
       statement = st;
       phase = EPhase.statementAppears;
       phasePos = 0;
@@ -45,6 +47,8 @@ const _ = new P5((p5) => {
       if (statement.getType() === '$p') {
         ++proofCount;
       }
+
+      return false;
     },
     error: (error: any) => {
       console.error(error);
@@ -52,7 +56,7 @@ const _ = new P5((p5) => {
     complete: () => {
       console.log('Done.');
     }
-  });
+  };
 
   p5.setup = () => {
     p5.createCanvas(1024, 456); // aspect ratio 16:9
@@ -101,7 +105,7 @@ const _ = new P5((p5) => {
       if (phasePos > 1 && proofCount < 10) {
         phase = EPhase.statementDone;
         phasePos = 0;
-        mm.nextStatement();
+        mm.read(observer);
       }
       break;
 
@@ -113,5 +117,5 @@ const _ = new P5((p5) => {
 
 });
 
-mm.nextStatement();
+mm.read(observer);
 

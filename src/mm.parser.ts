@@ -1,22 +1,14 @@
 import { MMCommentStripper } from './mm.comment.stripper';
 import { MMStatement } from './mm.statement';
 import { MMScope } from './mm.scope';
-import { Observable, Subject } from 'rxjs';
 import { take } from 'rxjs/operators';
 import { IMMLexer } from './mm.lexer.interface';
+import { Stream, Observer } from './stream';
+import { StateCheckedStream } from './state-checked-stream';
 
-enum State {
-    ready,
-    waiting,
-    eof
-}
-
-export class MMParser {
+class MMParser implements Stream<MMStatement> {
 
     private mmLexer: IMMLexer;
-    private eState: State = State.ready;
-    private statementSubject: Subject<MMStatement> = new Subject<MMStatement>();
-    statementStream: Observable<MMStatement> = this.statementSubject.asObservable();
 
     // Library
     private statements: MMStatement[] = [];
@@ -29,56 +21,51 @@ export class MMParser {
         this.mmLexer = new MMCommentStripper(filename);
     }
 
-    nextStatement() {
-        if (this.eState !== State.ready) {
-            this.statementSubject.error('nextStatement() called when not ready');
-            return;
-        }
-
-        this.eState = State.waiting;
+    read(observer: Observer<MMStatement>) {
 
         this.mmLexer.tokenStream.pipe(take(1)).subscribe({
-            next: (token: string) => {
+            next: (token: string): boolean => {
 
                 switch (token) {
                 case '${':
                     this.currentScope = new MMScope(this.currentScope);
-                    this.eState = State.ready;
-                    this.nextStatement();
-                    break;
+                    return true;
 
                 case '$}':
                     if (this.currentScope.parent === null) {
-                        this.statementSubject.error('$} without corresponding ${');
+                        observer.error('$} without corresponding ${');
+                        return false;
                     } else {
                         this.currentScope = this.currentScope.parent;
-                        this.eState = State.ready;
-                        this.nextStatement();
+                        return true;
                     }
                     break;
 
                 case '$c':
                 case '$v':
                 case '$d':
-                    this.parseStatement(token);
-                    break;
+                    this.parseStatement(token, observer);
+                    return false;
 
                 default:
                     if (token.length && token[0] === '$') {
-                        this.statementSubject.error('token ' + token + ' not supported (yet)');
+                        observer.error('token ' + token + ' not supported (yet)');
+                        return false;
                     } else if (this.currentScope.get(token, this.statements.length)) {
-                        this.statementSubject.error('statement ' + token + ' already exists');
+                        observer.error('statement ' + token + ' already exists');
+                        return false;
                     } else {
-                        this.parseStatement(token);
+                        this.parseStatement(token, observer);
+                        return false;
                     }
                 }
             },
             error: (error: any) => {
-                this.statementSubject.error(error);
+                observer.error(error);
             },
             complete: () => {
                 if (this.mmLexer.isComplete()) {
-                    this.statementSubject.complete();
+                    observer.complete();
                 }
             }
         });
@@ -86,11 +73,11 @@ export class MMParser {
         this.mmLexer.nextToken();
     }
 
-    parseStatement(token: string) {
+    private parseStatement(token: string, observer: Observer<MMStatement>) {
         const statement: MMStatement = new MMStatement(this.mmLexer, token, this.statements.length);
         statement.stream.subscribe({
             error: (error) => {
-                this.statementSubject.error(error);
+                observer.error(error);
             },
             complete: () => {
 
@@ -111,7 +98,7 @@ export class MMParser {
 
                         if (error.length) {
                             brc = false;
-                            this.statementSubject.error(error);
+                            observer.error(error);
                         }
                     }
 
@@ -124,19 +111,18 @@ export class MMParser {
                     this.currentScope.addDistinctiveness(statement);
                     break;
                 default:
-                    this.statementSubject.error('statement type ' + statement.getType() + ' not supported (yet)');
+                    observer.error('statement type ' + statement.getType() + ' not supported (yet)');
                 }
 
                 if (brc) {
                     this.statements.push(statement);
-                    this.eState = State.ready;
-                    this.statementSubject.next(statement);
+                    observer.next(statement);
                 }
             }
         });
     }
 
-    completeCV(statement: MMStatement): boolean {
+    private completeCV(statement: MMStatement): boolean {
         const tokens: ReadonlyArray<string> = statement.getTokens();
         for (let n = 1; n < tokens.length; ++n) {
             this.currentScope.add(tokens[n], statement);
@@ -144,5 +130,9 @@ export class MMParser {
 
         return true;
     }
+}
+
+export function createParser(filename: string): Stream<MMStatement> {
+    return new StateCheckedStream<MMStatement>(new MMParser(filename));
 }
 
