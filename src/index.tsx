@@ -28,7 +28,7 @@ const mm: MMParser = new MMParser('public/set.mm');
 
 const speed = 10;
 
-const sketch = new P5((p5) => {
+const _ = new P5((p5) => {
 
   let phase: EPhase = EPhase.statementAppears;
   let phasePos = 0;
