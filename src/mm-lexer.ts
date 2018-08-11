@@ -2,7 +2,7 @@
 import {Observable, Subject} from 'rxjs';
 import * as superagent from 'superagent';
 import * as Pako from 'pako';
-import { IMMLexer } from './mm.lexer.interface';
+import { IMMLexer } from './mm-lexer-interface';
 
 class Data {
     private data: Uint8Array[] = [];

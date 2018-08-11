@@ -1,6 +1,6 @@
 import { Observable, Subject } from 'rxjs';
 import { takeWhile, tap } from 'rxjs/operators';
-import { IMMLexer } from './mm.lexer.interface';
+import { IMMLexer } from './mm-lexer-interface';
 
 export class MMComment {
 

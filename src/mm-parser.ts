@@ -1,8 +1,8 @@
-import { MMCommentStripper } from './mm.comment.stripper';
-import { MMStatement } from './mm.statement';
-import { MMScope } from './mm.scope';
+import { MMCommentStripper } from './mm-comment-stripper';
+import { MMStatement } from './mm-statement';
+import { MMScope } from './mm-scope';
 import { take } from 'rxjs/operators';
-import { IMMLexer } from './mm.lexer.interface';
+import { IMMLexer } from './mm-lexer-interface';
 import { Stream, Observer } from './stream';
 import { StateCheckedStream } from './state-checked-stream';
 

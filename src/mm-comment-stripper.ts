@@ -1,9 +1,9 @@
 
-import { MMLexer } from './mm.lexer';
+import { MMLexer } from './mm-lexer';
 import { Observable, Subject } from 'rxjs';
 import { take } from 'rxjs/operators';
-import { IMMLexer } from './mm.lexer.interface';
-import { MMComment } from './mm.comment';
+import { IMMLexer } from './mm-lexer-interface';
+import { MMComment } from './mm-comment';
 
 enum State {
     ready,

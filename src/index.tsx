@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { render } from 'react-dom';
-import { createParser } from './mm.parser';
-import { MMStatement } from './mm.statement';
+import { createParser } from './mm-parser';
+import { MMStatement } from './mm-statement';
 import { Stream, Observer } from './stream';
 
 const P5 = require('p5');

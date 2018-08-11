@@ -1,4 +1,4 @@
-import { MMStatement } from './mm.statement';
+import { MMStatement } from './mm-statement';
 
 export class MMScope {
     private children: MMScope[] = [];

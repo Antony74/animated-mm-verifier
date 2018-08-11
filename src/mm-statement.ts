@@ -1,7 +1,7 @@
-import { IMMLexer } from './mm.lexer.interface';
+import { IMMLexer } from './mm-lexer-interface';
 import { Subject, Observable } from 'rxjs';
 import { tap, takeWhile } from 'rxjs/operators';
-import { MMScope } from './mm.scope';
+import { MMScope } from './mm-scope';
 
 export class MMStatement {
 
