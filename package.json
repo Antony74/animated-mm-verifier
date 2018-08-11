@@ -4,9 +4,10 @@
   "description": "Animated MetaMath verifier",
   "scripts": {
     "lint": "tslint ./src/*.ts*",
+    "prepare-mm": "tsc prepare-mm.ts && tslint prepare-mm.ts && node prepare-mm.js",
+    "set.mm": "tsc get.ts && tslint get.ts && node get.js https://raw.githubusercontent.com/metamath/set.mm/master/set.mm ./mm/set.mm",
     "start": "webpack-dev-server --mode development",
-    "webpack": "webpack",
-    "prepare-mm": "tsc prepare-mm.ts && tslint prepare-mm.ts && node prepare-mm.js"
+    "webpack": "webpack"
   },
   "author": "Antony Bartlett",
   "license": "MIT",
