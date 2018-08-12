@@ -1,39 +1,41 @@
+import { Stream, Observer } from './stream';
 import { IMMLexer } from './mm-lexer-interface';
-import { Subject, Observable } from 'rxjs';
 import { tap, takeWhile } from 'rxjs/operators';
 import { MMScope } from './mm-scope';
 
-export class MMStatement {
+export class MMStatement implements Stream<void> {
 
     private tokens: string[] = [];
-    private subject: Subject<void> = new Subject<void>();
-    stream: Observable<void> = this.subject.asObservable();
+    private mmLexer: IMMLexer;
 
     constructor(mmLexer: IMMLexer, firstToken: string, readonly index: number) {
+        this.mmLexer = mmLexer;
         this.tokens.push(firstToken);
+    }
 
+    read(observer: Observer<void>) {
         let currentToken = '';
 
-        mmLexer.tokenStream.pipe(
+        this.mmLexer.tokenStream.pipe(
             tap( (token: string) => currentToken = token ),
             takeWhile((token: string) => token !== '$.')).subscribe({
             next: (token: string) => {
                 this.tokens.push(token);
-                mmLexer.nextToken();
+                this.mmLexer.nextToken();
             },
             error: (error) => {
-                this.subject.error(error);
+                observer.error(error);
             },
             complete: () => {
                 if (currentToken === '$.') {
-                    this.subject.complete();
+                    observer.complete();
                 } else {
-                    this.subject.error('unterminated statement');
+                    observer.error('unterminated statement');
                 }
             }
         });
 
-        mmLexer.nextToken();
+        this.mmLexer.nextToken();
     }
 
     toString(): string {
@@ -304,4 +306,5 @@ export class MMStatement {
 */
     }
 }
+
 

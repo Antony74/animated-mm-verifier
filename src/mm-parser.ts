@@ -75,7 +75,10 @@ class MMParser implements Stream<MMStatement> {
 
     private parseStatement(token: string, observer: Observer<MMStatement>) {
         const statement: MMStatement = new MMStatement(this.mmLexer, token, this.statements.length);
-        statement.stream.subscribe({
+        statement.read({
+            next: (): boolean => {
+                return true;
+            },
             error: (error) => {
                 observer.error(error);
             },
