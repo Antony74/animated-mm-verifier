@@ -1,46 +1,48 @@
-import { Observable, Subject } from 'rxjs';
+import { Stream, Observer } from './stream';
 import { takeWhile, tap } from 'rxjs/operators';
 import { IMMLexer } from './mm-lexer-interface';
 
-export class MMComment {
+export class MMComment implements Stream<void> {
 
-    private commentSubject: Subject<void> = new Subject<void>();
-    commentStream: Observable<void> = this.commentSubject.asObservable();
+    mmLexer: IMMLexer;
 
     constructor(mmLexer: IMMLexer) {
+        this.mmLexer = mmLexer;
+    }
 
+    read(observer: Observer<void>) {
         let currentToken = '';
 
-        mmLexer.tokenStream.pipe(
+        this.mmLexer.tokenStream.pipe(
             tap( (token: string) => currentToken = token ),
             takeWhile((token: string) => token !== '$)')).subscribe({
             next: (token: string) => {
 
                 if (token.includes('$(')) {
-                    this.commentSubject.error('Characters $( found in a comment');
+                    observer.error('Characters $( found in a comment');
                     return;
                 }
 
                 if (token.includes('$)')) {
-                    this.commentSubject.error('Characters $) found in a comment');
+                    observer.error('Characters $) found in a comment');
                     return;
                 }
 
-                mmLexer.nextToken();
+                this.mmLexer.nextToken();
             },
             error: (error) => {
-                this.commentSubject.error(error);
+                observer.error(error);
             },
             complete: () => {
                 if (currentToken === '$)') {
-                    this.commentSubject.complete();
+                    observer.complete();
                 } else {
-                    this.commentSubject.error('unclosed comment');
+                    observer.error('unclosed comment');
                 }
             }
         });
 
-        mmLexer.nextToken();
+        this.mmLexer.nextToken();
     }
 }
 

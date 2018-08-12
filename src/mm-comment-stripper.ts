@@ -59,7 +59,10 @@ export class MMCommentStripper implements IMMLexer {
 
     parseComment() {
         const comment: MMComment = new MMComment(this.mmLexer);
-        comment.commentStream.subscribe({
+        comment.read({
+            next: (): boolean => {
+                return true;
+            },
             error: (error) => {
                 this.tokenSubject.error(error);
             },
