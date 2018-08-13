@@ -16,7 +16,7 @@ superagent.get(url).end((responseError: superagent.ResponseError, response: supe
     if (responseError) {
         console.log(responseError.message);
     } else {
-        fs.writeFile(filename, response.body, (fileError: NodeJS.ErrnoException) => {
+        fs.writeFile(filename, response.text, (fileError: NodeJS.ErrnoException) => {
             if (fileError) {
                 console.log(fileError.message);
             } else {
