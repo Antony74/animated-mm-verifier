@@ -43,7 +43,8 @@ const store = createStore(
   combineReducers({
     machine: createReducer(machine.initialState)
   }),
-  applyMiddleware(createMiddleware(machine, actionMap))
+  (window as any).__REDUX_DEVTOOLS_EXTENSION__ && (window as any).__REDUX_DEVTOOLS_EXTENSION__(),
+  applyMiddleware(createMiddleware(machine, actionMap)),
 );
 
 store.dispatch({type: 'TIMER'});
