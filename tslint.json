@@ -108,6 +108,7 @@
       "check-operator",
       "check-separator",
       "check-type"
-    ]
+    ],
+    "no-implicit-dependencies": true
   }
 }
