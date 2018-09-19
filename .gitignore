@@ -1,7 +1,4 @@
 node_modules
-get.js
-prepare-mm.js
-src/*.js
 mm/set.mm
 *.map
 public/*.mm.gz.*

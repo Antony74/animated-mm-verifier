@@ -4,7 +4,7 @@ const maxFileSize = 512 * 1024;
 import * as fs from 'fs';
 import * as Pako from 'pako';
 
-fs.readdir(__dirname + '/mm/', (dirErr, files) => {
+fs.readdir('./mm/', (dirErr, files) => {
 
     if (dirErr) {
         console.error(dirErr);
@@ -21,7 +21,7 @@ fs.readdir(__dirname + '/mm/', (dirErr, files) => {
                 sFileCount = '0' + sFileCount;
             }
 
-            const stream = fs.createWriteStream(__dirname + '/public/' + filename + '.gz.' + sFileCount, {encoding: 'binary'});
+            const stream = fs.createWriteStream('./public/' + filename + '.gz.' + sFileCount, {encoding: 'binary'});
 
             stream.on('error', (writeError) => {
                 console.error(writeError);
@@ -32,7 +32,7 @@ fs.readdir(__dirname + '/mm/', (dirErr, files) => {
         }
 
         const deflate = new Pako.Deflate({gzip: true, to: 'string', header: {name: filename}} as Pako.DeflateOptions);
-        const readStream = fs.createReadStream(__dirname + '/mm/' + filename, {encoding: 'binary'});
+        const readStream = fs.createReadStream('./mm/' + filename, {encoding: 'binary'});
         let writeStream = createWriteStream();
         let bytesWritten = 0;
 
