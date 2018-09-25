@@ -99,9 +99,16 @@ const store = createStore(
   applyMiddleware(createMiddleware(machine, effects)),
 );
 
-// store.dispatch(new RequestChunkAction());
-store.dispatch({type: chunkDownloadActions.requestChunk});
-store.dispatch({type: chunkDownloadActions.incrementUrlChunk});
+// Monkey-patch store.dispatch to be TypeScript-friendly
+const plainDispatch = store.dispatch;
+
+store.dispatch = ((action: Action) => {
+  plainDispatch(Object.assign({}, action));
+}) as any;
+// End of monkey-patch
+
+store.dispatch(new RequestChunkAction());
+store.dispatch(new IncrementUrlChunkAction());
 
 function App() {
 
