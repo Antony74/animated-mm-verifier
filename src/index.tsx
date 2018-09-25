@@ -3,7 +3,7 @@ import { render } from 'react-dom';
 
 import { Machine } from 'xstate';
 import { createStore, combineReducers, applyMiddleware, Action } from 'redux';
-import { createMiddleware, createReducer } from 'redux-xstate';
+import { createMiddleware as createReduxXStateMiddleware, createReducer as createReduxXStateReducer } from 'redux-xstate';
 import { MachineConfig } from 'xstate/lib/types';
 import * as superagent from 'superagent';
 
@@ -92,11 +92,11 @@ const machine = Machine(stateChart);
 
 const store = createStore(
   combineReducers({
-    machine: createReducer(machine.initialState),
+    machine: createReduxXStateReducer(machine.initialState),
     chunkDownload: chunkDownloadReducer
   }),
   (window as any).__REDUX_DEVTOOLS_EXTENSION__ && (window as any).__REDUX_DEVTOOLS_EXTENSION__(),
-  applyMiddleware(createMiddleware(machine, effects)),
+  applyMiddleware(createReduxXStateMiddleware(machine, effects)),
 );
 
 // Monkey-patch store.dispatch to be TypeScript-friendly
