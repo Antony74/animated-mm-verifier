@@ -1,11 +1,24 @@
 import * as superagent from 'superagent';
 import { MachineConfig } from 'xstate/lib/types';
+import { Action } from 'redux';
 
 import { MachineModule } from './machine-module';
 import { ChunkDownloadState, chunkDownloadInitialState } from './chunk-downloader.state';
 import { State } from './state';
 
-export function createChunkDownloaderModule(url: string): MachineModule {
+export function createRequestChunkAction(): Action {
+  return {type: 'REQUEST_CHUNK'};
+}
+
+export interface ChunkDownloaderConfig {
+  url: string;
+  onReady: () => void;
+  onGotChunk: () => void;
+  onError: (msg: string) => void;
+  onComplete: () => void;
+}
+
+export function createChunkDownloaderModule(config: ChunkDownloaderConfig): MachineModule {
 
   const machineConfig: MachineConfig = {
     initial: 'ready',
@@ -46,7 +59,7 @@ export function createChunkDownloaderModule(url: string): MachineModule {
   const effects: { [key: string]: (dispatch, state) => void } = {
 
     onReady: (dispatch, state) => {
-      dispatch({ type: 'REQUEST_CHUNK' });
+      config.onReady();
     },
 
     onRequestChunk: (dispatch, state: State) => {
@@ -56,7 +69,7 @@ export function createChunkDownloaderModule(url: string): MachineModule {
       }
 
       superagent
-        .get(url + '.gz.' + sFileCount)
+        .get(config.url + '.gz.' + sFileCount)
         .responseType('arraybuffer')
         .then((response: superagent.Response) => {
           dispatch({ type: 'ADD_CHUNK', payload: response.body });
@@ -65,7 +78,8 @@ export function createChunkDownloaderModule(url: string): MachineModule {
           if (error.status === 404 && sFileCount !== '001') {
             dispatch({ type: 'COMPLETE' });
           } else {
-            dispatch({ type: 'ERROR', payload: error.message });
+            dispatch({ type: 'ERROR' });
+            config.onError(error.message);
           }
         });
 
@@ -74,12 +88,12 @@ export function createChunkDownloaderModule(url: string): MachineModule {
     },
 
     onGotChunk: (dispatch, state: State) => {
-      console.log(state.chunkDownload.chunks);
+      config.onGotChunk();
       dispatch({ type: 'READY' });
     },
 
     onComplete: () => {
-      console.log('onComplete');
+      config.onComplete();
     }
 
   };

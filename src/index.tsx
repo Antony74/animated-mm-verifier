@@ -5,11 +5,22 @@ import { Machine } from 'xstate';
 import { createStore, combineReducers, applyMiddleware, Action } from 'redux';
 import { createMiddleware as createReduxXStateMiddleware, createReducer as createReduxXStateReducer } from 'redux-xstate';
 
-import { createChunkDownloaderModule } from './chunk-downloader';
+import { createChunkDownloaderModule, createRequestChunkAction } from './chunk-downloader';
 
-const url = 'public/set.mm';
-
-const chunkDownloader = createChunkDownloaderModule(url);
+const chunkDownloader = createChunkDownloaderModule({
+    url: 'public/set.mm',
+    onReady: () => {
+      store.dispatch(createRequestChunkAction());
+    },
+    onGotChunk: () => {
+    },
+    onError: (msg: string) => {
+      console.error(msg);
+    },
+    onComplete: () => {
+      console.log('complete');
+    }
+  });
 
 const machine = Machine(chunkDownloader.machineConfig);
 
