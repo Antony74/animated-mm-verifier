@@ -9,25 +9,14 @@ import * as superagent from 'superagent';
 
 const url = 'public/set.mm';
 
-enum chunkDownloadActions {
-  incrementUrlChunk = 'INCREMENT_URL_CHUNK',
-  requestChunk = 'REQUEST_CHUNK'
-}
-
-class IncrementUrlChunkAction implements Action {
-  readonly type = chunkDownloadActions.incrementUrlChunk;
-}
-
-class RequestChunkAction implements Action {
-  readonly type = chunkDownloadActions.requestChunk;
-}
-
 interface ChunkDownloadState {
   nextChunk: number;
+  chunks: ArrayBuffer[];
 }
 
 const chunkDownloadInitialState: ChunkDownloadState = {
-  nextChunk: 1
+  nextChunk: 1,
+  chunks: []
 };
 
 interface State {
@@ -36,6 +25,11 @@ interface State {
 }
 
 const effects = {
+
+  onReady: (dispatch, state: State) => {
+    dispatch({type: 'REQUEST_CHUNK'});
+  },
+
   onRequestChunk: (dispatch, state: State) => {
     let sFileCount: string = state.chunkDownload.nextChunk.toString();
     while (sFileCount.length < 3) {
@@ -46,45 +40,75 @@ const effects = {
       .get(url + '.gz.' + sFileCount)
       .responseType('arraybuffer')
       .then((response: superagent.Response) => {
-//            this.eState = State.ready;
-//          this.inflate.push(response.body, false);
+        dispatch({type: 'ADD_CHUNK', payload: response.body});
+        dispatch({type: 'GOT_CHUNK'});
       }).catch((error: superagent.ResponseError) => {
-          if (error.status === 404 && this.fileIndex !== 1) {
-//                this.eState = State.eof;
-//              this.inflate.push(new ArrayBuffer(0), true);
-
-//              if (this.data.getLength() === 0) {
-//                  this.complete = true;
-//                  this.tokenSubject.complete();
-//              }
-
+          if (error.status === 404 && sFileCount !== '001') {
+            dispatch({type: 'COMPLETE'});
           } else {
-//              this.tokenSubject.error(error);
+            dispatch({type: 'ERROR', payload: error.message});
           }
       });
+
+    dispatch({type: 'INCREMENT_URL_CHUNK'});
+    dispatch({type: 'WAITING'});
+  },
+
+  onGotChunk: (dispatch, state: State) => {
+    console.log(state.chunkDownload.chunks);
+    dispatch({type: 'READY'});
+  },
+
+  onComplete: () => {
+    console.log('onComplete');
   }
+
 };
 
-function chunkDownloadReducer(state: ChunkDownloadState = chunkDownloadInitialState, action: Action): ChunkDownloadState {
+function chunkDownloadReducer(state: ChunkDownloadState = chunkDownloadInitialState, action): ChunkDownloadState {
   switch (action.type) {
-    case chunkDownloadActions.incrementUrlChunk:
+    case 'INCREMENT_URL_CHUNK':
       return {...state, nextChunk: ++state.nextChunk};
+    case 'ADD_CHUNK':
+      return {...state, chunks: [...state.chunks, action.payload]};
   }
 
   return state;
 }
 
 const stateChart: MachineConfig = {
-  initial: 'idle',
+  initial: 'ready',
   states: {
-    idle: {
+    ready: {
+      onEntry: ['onReady'],
       on: {
         REQUEST_CHUNK: 'requestChunk'
       }
     },
     requestChunk: {
-      onEntry: ['onRequestChunk']
+      onEntry: ['onRequestChunk'],
+      on: {
+        WAITING: 'waiting'
+      },
     },
+    waiting: {
+      on: {
+        GOT_CHUNK: 'gotChunk',
+        COMPLETE: 'complete'
+      }
+    },
+    gotChunk: {
+      onEntry: ['onGotChunk'],
+      on: {
+        READY: 'ready'
+      }
+    },
+    error: {
+      onEntry: ['onError']
+    },
+    complete: {
+      onEntry: ['onComplete']
+    }
   }
 };
 
@@ -107,8 +131,7 @@ store.dispatch = ((action: Action) => {
 }) as any;
 // End of monkey-patch
 
-store.dispatch(new RequestChunkAction());
-store.dispatch(new IncrementUrlChunkAction());
+store.dispatch({type: 'REQUEST_CHUNK'});
 
 function App() {
 
